@@ -57,7 +57,7 @@ while not done:
             done = True   
         if event.type == pygame.MOUSEBUTTONDOWN:
             print("PEW PEW")
-            pygame.MOUSEBUTTONUP 
+            
     #!Dibujos de pantalla  
     screen.fill(white)
     lista_meteoros.draw(screen)

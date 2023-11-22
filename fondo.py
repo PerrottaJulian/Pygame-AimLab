@@ -3,7 +3,7 @@ import pygame, sys, random
 pygame.init()
 
 #Pantalla
-size = (500, 600)
+size = (510, 600)
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Meteoritos")
 clock = pygame.time.Clock()
@@ -37,7 +37,7 @@ all_sprites_list = pygame.sprite.Group() #? Proposito: Dibujar los sprites
 for i in range(50):
     meteor = Meteor()
     meteor.rect.x = random.randrange(500)
-    meteor.rect.y = random.randrange(600)
+    meteor.rect.y = random.randrange(500)
     
     meteor_list.add(meteor)
     all_sprites_list.add(meteor)
@@ -69,12 +69,12 @@ while not done:
     player.rect.y = y
     
     #colision
-    meteor_hit_list =  pygame.sprite.spritecollide(player, meteor_list, True)
+    meteor_hit_list = pygame.sprite.spritecollide(player, meteor_list, True)
     
     for meteor in meteor_hit_list:
         score += 1
         print(score)
-        
+
     if score == 50:
         score = 0
         for i in range(50):
@@ -83,8 +83,10 @@ while not done:
             meteor.rect.y = random.randrange(600)
             meteor_list.add(meteor)
             all_sprites_list.add(meteor)
-        
-    
+            
+    font = pygame.font.SysFont("serif", 25)
+    text = font.render(f"Score: {score}", True, (0,0,0))    
+    screen.blit(text, [100, 550])   
     
     """
     screen.blit(background, [0,0])
@@ -94,4 +96,3 @@ while not done:
         
     pygame.display.update()
     clock.tick(60)
-

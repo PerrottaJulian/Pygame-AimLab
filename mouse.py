@@ -25,7 +25,7 @@ clock = pygame.time.Clock()
 class Meteoro(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.image.load("meteor.png").convert()
+        self.image = pygame.image.load("sprites_sounds/meteor.png").convert()
         self.image.set_colorkey(black)
         self.rect = self.image.get_rect()
         

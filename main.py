@@ -15,35 +15,38 @@ dark_blue = (0, 0, 15)
 SCREEN_LENGHT = 1000
 SCREEN_HIGH = 500
 
-middle = (SCREEN_LENGHT//3, SCREEN_HIGH//2)
+MIDDLE = (SCREEN_LENGHT//3, SCREEN_HIGH//2)
 
 #Pantalla
 screen = pygame.display.set_mode((SCREEN_LENGHT, SCREEN_HIGH))
+pygame.display.set_caption("AimLab")
 pygame.mouse.set_visible(0)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont("serif", 25)
 
 #sonido
-sound = pygame.mixer.Sound("sprites_sounds/gunshot.mp3")
+gunshot = pygame.mixer.Sound("sprites_sounds/gunshot.mp3")
+clang = pygame.mixer.Sound("sprites_sounds/target_sound.mp3")
+
 
 #Clases (Sprites)
 class Target(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("sprites_sounds/target2.png").convert()
-        self.image.set_colorkey(full_black)
+        #self.image.set_colorkey(full_black)
         self.rect = self.image.get_rect()
 
 class Shot(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.image.load("sprites_sounds/disparo4.png").convert()
-        #self.image.set_colorkey(white)
+        self.image = pygame.image.load("sprites_sounds/disparo2.png").convert()
+        self.image.set_colorkey(full_black)
         self.rect = self.image.get_rect()     
           
 #Modulos
 def generateTargets():
-    for i in range(25):
+    for i in range(15):
         target = Target()
         target.rect.x = random.randint(10, SCREEN_LENGHT - 50)
         target.rect.y = random.randint(10, SCREEN_HIGH - 50)
@@ -52,18 +55,18 @@ def generateTargets():
         all_sprites_list.add(target)
 
 
-def displayFrames(start, game, gameover):
-    screen.fill(white)
+def updateScreen(start, game, gameover):
+    screen.fill(blue)
     if start:
         start_text = font.render("Pantalla de Inicio", True, full_black)
-        screen.blit(start_text, middle)
+        screen.blit(start_text, MIDDLE)
     elif game:
         #game_text = font.render("JUEGOOOOOOO", True, black)
         #screen.blit(game_text, middle)
         all_sprites_list.draw(screen)
     elif gameover:
         end_text = font.render("GAME OVER", True, full_black)
-        screen.blit(end_text, middle)
+        screen.blit(end_text, MIDDLE)
     mira(mouse_pos)
     pygame.display.update()
 
@@ -71,8 +74,10 @@ def mira(center): #!Mirilla que sigue al mouse
     pygame.draw.circle(screen, red, center, 20, 5)
     pygame.draw.circle(screen, red, center, 5)
 
+
 #listas
 target_list = pygame.sprite.Group() #? Proposito: Detectar colisiones
+shot_list = pygame.sprite.Group()
 all_sprites_list = pygame.sprite.Group() #? Proposito: Dibujar los sprites
 
 #Data previa
@@ -97,9 +102,12 @@ while not done:
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 shot = Shot()
                 shot.rect.x = mouse_pos[0] -10
-                shot.rect.y = mouse_pos[1] -11
+                shot.rect.y = mouse_pos[1] -10
+                
+                shot_list.add(shot)
                 all_sprites_list.add(shot)
-                sound.play()
+                gunshot.play()
+                #clang.play()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 all_sprites_list.clear()
              
@@ -113,9 +121,31 @@ while not done:
         #####!
     
                      
-    displayFrames(start, game, gameover)
+    updateScreen(start, game, gameover)
 
+    #! Logica del Juego (pasar a funciones)
+    for shot in shot_list:
+        target_hit_list = pygame.sprite.spritecollide(shot, target_list, True)
+        for hit in target_hit_list:
+            clang.play()
+
+    if len(target_list) == 0:
+        shot_list.empty()
+        target_list.empty
+        all_sprites_list.empty()
+        generateTargets()
+
+    ####!
+    
+    
+    
+    
+    
+    
     clock.tick(60)
+
+
+
 
 pygame.quit()
 

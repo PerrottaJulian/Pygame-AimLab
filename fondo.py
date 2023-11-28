@@ -18,7 +18,7 @@ meteor.set_colorkey((0,0,0) )
 class Meteor (pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.image.load("meteor.png").convert()
+        self.image = pygame.image.load("diana1.png").convert()
         self.image.set_colorkey((0,0,0))
         self.rect = self.image.get_rect()
 

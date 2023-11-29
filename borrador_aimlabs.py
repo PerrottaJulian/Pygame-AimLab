@@ -43,7 +43,20 @@ class Shot(pygame.sprite.Sprite):
         self.image = pygame.image.load("sprites_sounds/disparo4.png").convert()
         self.image.set_colorkey(full_black)
         self.rect = self.image.get_rect()     
-          
+        
+        
+"""
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("sprites_sounds/mira.png").convert()
+        self.image.set_colorkey(white)
+        self.rect = self.image.get_rect() 
+    
+    def update(self):
+        self.rect.center = mouse_pos
+"""
+        
 #Modulos
 def generateTargets():
     for i in range(15):
@@ -87,7 +100,14 @@ game = False
 gameover = False
 generateTargets()
 
+
+"""player = Player()
+all_sprites_list.add(player)
+"""
+
+
 #Bucle Principal
+contador = 0
 while not done:
     mouse_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
@@ -119,10 +139,11 @@ while not done:
             start = True
             
         #####!
+    all_sprites_list.update()
     
                      
     updateScreen(start, game, gameover)
-
+    
     #! Logica del Juego (pasar a funciones)
     for shot in shot_list:
         target_hit_list = pygame.sprite.spritecollide(shot, target_list, True)
@@ -143,10 +164,8 @@ while not done:
     ####!
     
     
-    
-    
-    
-    
+    contador += 1
+    print(contador)
     clock.tick(60)
 
 

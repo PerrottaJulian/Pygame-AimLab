@@ -34,13 +34,13 @@ class Target(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("sprites_sounds/target2.png").convert()
-        #self.image.set_colorkey(full_black)
+        self.image.set_colorkey(full_black)
         self.rect = self.image.get_rect()
 
 class Shot(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.image.load("sprites_sounds/45724.png").convert()
+        self.image = pygame.image.load("sprites_sounds/disparo4.png").convert()
         self.image.set_colorkey(full_black)
         self.rect = self.image.get_rect()     
           
@@ -101,8 +101,8 @@ while not done:
                 gameover = True
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 shot = Shot()
-                shot.rect.x = mouse_pos[0] -15
-                shot.rect.y = mouse_pos[1] -20
+                shot.rect.x = mouse_pos[0] -5
+                shot.rect.y = mouse_pos[1] -8
                 
                 shot_list.add(shot)
                 all_sprites_list.add(shot)
@@ -127,10 +127,10 @@ while not done:
     for shot in shot_list:
         target_hit_list = pygame.sprite.spritecollide(shot, target_list, True)
         r = random.randint(1,10)
-        if r == 1 :
+        """if r == 1 :
             
             shot_list.remove(shot)
-            all_sprites_list.remove(shot)
+            all_sprites_list.remove(shot)"""
         for hit in target_hit_list:
             clang.play()
 

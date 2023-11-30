@@ -1,3 +1,3 @@
-from aimlabs import main
+from aimlab import main
 
 main() 

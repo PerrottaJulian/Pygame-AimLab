@@ -14,15 +14,15 @@ green = (0,255,0)
 grey = (50,50,50)
 dark_blue = (0, 0, 15)
 
-SCREEN_LENGHT = 1000
-SCREEN_HIGH = 500
+SCREEN_LENGHT = 1000 #1300
+SCREEN_HIGH = 500 #650
 
 MIDDLE = (SCREEN_LENGHT//3, SCREEN_HIGH//2)
 DOWN_MIDDLE = (SCREEN_LENGHT//3, SCREEN_HIGH//2 + 30)
 TITLE_POS = (SCREEN_LENGHT//3, 40)
 SUBTITLE_POS = (SCREEN_LENGHT//3+40, 90)
 SCORE_POS = (50, SCREEN_HIGH-30)
-
+LEVEL_POS = (10, 10 )
 #Iniciacion
 
 pygame.font.init()
@@ -33,13 +33,13 @@ screen = pygame.display.set_mode((SCREEN_LENGHT, SCREEN_HIGH))
 pygame.display.set_caption("AimLab")
 pygame.mouse.set_visible(0)
 
-background = pygame.image.load("sprites_and_sounds/wall2.png")
+background = pygame.image.load("sprites_and_sounds/wall.png")
 
 #sonido
 gunshot = pygame.mixer.Sound("sprites_and_sounds/gunshot2.mp3")
 clang = pygame.mixer.Sound("sprites_and_sounds/target-sound2.mp3")
 
-
+#fuentes de texto
 title_font = pygame.font.SysFont("serif", 50, True)
 subtitle_font = pygame.font.SysFont("arial", 20, False, True)
 score_font = subtitle_font = pygame.font.SysFont("arial", 20, True)
@@ -55,7 +55,7 @@ class Target(pygame.sprite.Sprite):
         self.image.set_colorkey(full_black)
         self.rect = self.image.get_rect()
         
-        self.speed = 5
+        self.speed = random.randint(3,7)
         self.type = type
         
     def update(self):
@@ -67,6 +67,13 @@ class Target(pygame.sprite.Sprite):
             
         
 class Shot(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("sprites_and_sounds/disparo4.png").convert()
+        self.image.set_colorkey(full_black)
+        self.rect = self.image.get_rect()  
+
+class BulletHole(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("sprites_and_sounds/disparo4.png").convert()
@@ -93,11 +100,21 @@ def startScreen():
     screen.blit(start_title, TITLE_POS)
     start_text = subtitle_font.render("Presione cualquier tecla para iniciar", True, full_black)
     screen.blit(start_text, SUBTITLE_POS )
-                 
-#######! Clase 'Game'
+    
+def inGameScreen(score, level):
+    score_text = score_font.render(f"Score: {score}", True, red)
+    level_text = title_font.render(f"Level {level}", True, red)
+    
+    screen.blit(score_text, SCORE_POS)
+    screen.blit(level_text, LEVEL_POS)  
+        
+        
+         
+#######!!! Clase 'Game'
 class Game():
     def __init__(self):
         self.score = 0
+        self.level = 1
         self.start = True
         self.setTime()
         
@@ -108,8 +125,9 @@ class Game():
         #listas
         self.target_list = pygame.sprite.Group() #? Proposito: Detectar colisiones
         self.shot_list = pygame.sprite.Group()
-        self.all_sprites_list = pygame.sprite.Group() #? Proposito: Dibujar los sprites
-
+        self.bullet_list = pygame.sprite.Group() #? Proposito: Dibujar los sprites
+        self.all_sprites_list = pygame.sprite.Group() 
+    
     def setTime(self):
         self.time = 1000
         
@@ -125,20 +143,25 @@ class Game():
                 return True
             if event.type == pygame.MOUSEBUTTONDOWN:
                 shot = Shot()
+                bullet_hole = BulletHole()
                 shot.rect.center = self.mouse_pos
+                bullet_hole.rect.center = self.mouse_pos
                 
                 self.shot_list.add(shot)
+                self.bullet_list.add(bullet_hole)
                 self.all_sprites_list.add(shot)
+                self.all_sprites_list.add(bullet_hole)
+        
                 gunshot.play()
                 
                 #*extra de tiempo cuando disparo
                 self.shot_time = pygame.time.get_ticks()
-                
-                
+         
             if event.type == pygame.KEYDOWN:
                 if self.start:
                     self.start = False
-                    self.shot_list.empty()
+                    
+                    self.bullet_list.empty()
                     self.all_sprites_list.empty()
                     
                     generateTargets(self, 30) #? primera vez que genera los objetivos, luego de tocar cualquier tecla en la pantalla de inicio
@@ -154,11 +177,13 @@ class Game():
         if self.start:
             startScreen()
             self.shot_list.draw(screen)
+            self.bullet_list.draw(screen)
             
         else:   
+            inGameScreen(self.score, self.level)
             self.all_sprites_list.draw(screen) #? Diferenciacion entre pantalla de inicio y de juego
-            score_text = score_font.render(f"Score: {self.score}", True, full_black)
-            screen.blit(score_text, SCORE_POS)
+            
+            
             
         aim(self.mouse_pos)
         
@@ -166,13 +191,16 @@ class Game():
 
     def gameLogic(self):
         self.all_sprites_list.update()
+        
+        #? Eliminar los disparos apenas se generan, para evitar que se queden estaticos y colisionen con los objetivos que se mueven,
+        #? Pero aun asi se generan una milesima de segundo, por lo que al momento del disparo si hay colision
         for shot in self.shot_list:
             if self.global_time - self.shot_time > 20:
                 self.shot_list.remove(shot)
                 self.all_sprites_list.remove(shot)  
                     
         if not self.start:
-            self.passTime() #? Pasar el tiempo
+            self.passTime() #? Pasar el tiempo del nivel
             #print(self.time)
             for shot in self.shot_list:
                 target_hitlist = pygame.sprite.spritecollide(shot, self.target_list, True)
@@ -191,9 +219,14 @@ class Game():
                 generateTargets(self, 35)
             
             
-            if self.time == 0:
+            if self.time == 0:  
                 self.__init__()
-                       
+            
+            #? La idea del juego es acumular la mayor cantidad de puntos, disparandole a los objetivos.
+            #?Cuando le disparaste a todos los objetivos, se reinica el timpo y aparecen nuevos (se avanza de nivel)
+            #?Se pierde cuando te quedas sin tiempo
+            #?La cantidad de tiempo es simpre la misma, pero en cada nuevo nivel hay mas objetivos.
+            
 ########################!
         
 #Funcion principal

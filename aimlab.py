@@ -49,12 +49,23 @@ clock = pygame.time.Clock()
 
 #Sprites
 class Target(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, type = 1):
         super().__init__()
         self.image = pygame.image.load("sprites_and_sounds/target2.png").convert()
         self.image.set_colorkey(full_black)
         self.rect = self.image.get_rect()
-
+        
+        self.speed = 5
+        self.type = type
+        
+    def update(self):
+        if self.type == 1:
+            self.rect.x += self.speed
+            
+            if self.rect.x >= SCREEN_LENGHT-10 or self.rect.x < 0:
+                self.speed *= -1
+            
+        
 class Shot(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -65,7 +76,8 @@ class Shot(pygame.sprite.Sprite):
 #Funciones
 def generateTargets(game, amount):
     for i in range(amount):
-        target = Target()
+        type = random.randint(1,4)
+        target = Target(type)
         target.rect.x = random.randint(10, SCREEN_LENGHT - 50)
         target.rect.y = random.randint(10, SCREEN_HIGH - 50)
     
@@ -89,16 +101,22 @@ class Game():
         self.start = True
         self.setTime()
         
+        #*extra de timepo global
+        self.global_time = 0
+        self.shot_time = 0
+        
         #listas
         self.target_list = pygame.sprite.Group() #? Proposito: Detectar colisiones
         self.shot_list = pygame.sprite.Group()
         self.all_sprites_list = pygame.sprite.Group() #? Proposito: Dibujar los sprites
 
     def setTime(self):
-        self.time = 2000
+        self.time = 1000
+        
     def passTime(self):
         self.time -= 1
-     
+
+    
     #!Funciones pricipales de juego        
     def events(self):
         for event in pygame.event.get():
@@ -113,13 +131,17 @@ class Game():
                 self.all_sprites_list.add(shot)
                 gunshot.play()
                 
+                #*extra de tiempo cuando disparo
+                self.shot_time = pygame.time.get_ticks()
+                
+                
             if event.type == pygame.KEYDOWN:
                 if self.start:
                     self.start = False
                     self.shot_list.empty()
                     self.all_sprites_list.empty()
                     
-                    generateTargets(self, 50) #? primera vez que genera los objetivos, luego de tocar cualquier tecla en la pantalla de inicio
+                    generateTargets(self, 30) #? primera vez que genera los objetivos, luego de tocar cualquier tecla en la pantalla de inicio
                      
         return False
     
@@ -127,7 +149,6 @@ class Game():
         self.mouse_pos = pygame.mouse.get_pos()
         
         #fondo de pantalla
-        #*screen.fill(blue)
         screen.blit(background, [0,0]) 
         
         if self.start:
@@ -144,15 +165,21 @@ class Game():
         pygame.display.update()
 
     def gameLogic(self):
-        #*self.all_sprites_list.update()
+        self.all_sprites_list.update()
+        for shot in self.shot_list:
+            if self.global_time - self.shot_time > 20:
+                self.shot_list.remove(shot)
+                self.all_sprites_list.remove(shot)  
+                    
         if not self.start:
             self.passTime() #? Pasar el tiempo
-            print(self.time)
+            #print(self.time)
             for shot in self.shot_list:
                 target_hitlist = pygame.sprite.spritecollide(shot, self.target_list, True)
+                
+                
                 for hit in target_hitlist:
                     self.score += 1
-                    #*print(self.score)
                     clang.play()
                     
             if len(self.target_list) == 0:
@@ -161,9 +188,9 @@ class Game():
                 self.all_sprites_list.empty()
                 
                 self.setTime()
-                generateTargets(self, 50)
-                
-                
+                generateTargets(self, 35)
+            
+            
             if self.time == 0:
                 self.__init__()
                        
@@ -172,14 +199,20 @@ class Game():
 #Funcion principal
 def main():
     pygame.init()
+    
     done = False
     mygame = Game()
     while not done:
         done = mygame.events()
         
+        #*extra de tiempo global
+        timer = pygame.time.get_ticks()
+        mygame.global_time = timer
+        
         mygame.gameLogic() 
         mygame.screenUpdate()
         
+        print(f"Time: {mygame.global_time} ShotTime: {mygame.shot_time}")
         
         clock.tick(60)
         

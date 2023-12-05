@@ -1,18 +1,19 @@
-import pygame, time, random
-# = guia del codigo
+import pygame, random
+# = guia del codigo // Usar la extension 'Better Comments' para ver los comentarios especiales
 #* = Codigo no usado por el momento/comentarios personales
 #! = Notas/Separacion importantes
 #? = Comentarios 
 
 #Constantes
-full_black = (0,0,0)
-black = (2,2,2)
-white = (255,255,255)
-blue = (0,0,255)
-red = (255,0,0)
-green = (0,255,0)
-grey = (50,50,50)
-dark_blue = (0, 0, 15)
+FULL_BLACK = (0,0,0)
+BLACK = (2,2,2)
+WHITE = (255,255,255)
+BLUE = (0,0,255)
+RED = (255,0,0)
+GREEN = (0,255,0)
+GREY = (50,50,50)
+DARK_BLUE = (0, 0, 15)
+SKYBLUE = (24, 125, 184)
 
 SCREEN_LENGHT = 1000 #1300
 SCREEN_HIGH = 500 #650
@@ -21,10 +22,12 @@ MIDDLE = (SCREEN_LENGHT//3, SCREEN_HIGH//2)
 DOWN_MIDDLE = (SCREEN_LENGHT//3, SCREEN_HIGH//2 + 30)
 TITLE_POS = (SCREEN_LENGHT//3, 40)
 SUBTITLE_POS = (SCREEN_LENGHT//3+40, 90)
-SCORE_POS = (50, SCREEN_HIGH-30)
-LEVEL_POS = (10, 10 )
-#Iniciacion
+SCORE_POS = (40, SCREEN_HIGH-30)
+TIME_POS = (SCREEN_LENGHT-100, SCREEN_HIGH-30)
+LEVEL_POS = (10, 10)
+SIGN_POS = (SCREEN_LENGHT-290, SCREEN_HIGH-40)
 
+#Iniciacion
 pygame.font.init()
 pygame.mixer.init()
 
@@ -42,17 +45,23 @@ clang = pygame.mixer.Sound("sprites_and_sounds/target-sound2.mp3")
 #fuentes de texto
 title_font = pygame.font.SysFont("serif", 50, True)
 subtitle_font = pygame.font.SysFont("arial", 20, False, True)
-score_font = subtitle_font = pygame.font.SysFont("arial", 20, True)
+score_font  = pygame.font.SysFont("arial", 20, True)
+sign_font  = pygame.font.SysFont("comicsans", 15, True)
 
 #otros
 clock = pygame.time.Clock()
 
 #Sprites
+targets = ["sprites_and_sounds/target_big.png", "sprites_and_sounds/target_small.png", "sprites_and_sounds/target.png"]
 class Target(pygame.sprite.Sprite):
-    def __init__(self, type = 1):
+    def __init__(self, type):
         super().__init__()
-        self.image = pygame.image.load("sprites_and_sounds/target2.png").convert()
-        self.image.set_colorkey(full_black)
+        r = random.randint(0,10)
+        if r > 1:
+            r = 2
+            
+        self.image = pygame.image.load(targets[r]).convert()
+        self.image.set_colorkey(FULL_BLACK)
         self.rect = self.image.get_rect()
         
         self.speed = random.randint(3,7)
@@ -64,57 +73,50 @@ class Target(pygame.sprite.Sprite):
             
             if self.rect.x >= SCREEN_LENGHT-10 or self.rect.x < 0:
                 self.speed *= -1
-            
-        
+                   
 class Shot(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("sprites_and_sounds/disparo4.png").convert()
-        self.image.set_colorkey(full_black)
+        self.image.set_colorkey(FULL_BLACK)
         self.rect = self.image.get_rect()  
 
 class BulletHole(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("sprites_and_sounds/disparo4.png").convert()
-        self.image.set_colorkey(full_black)
+        self.image.set_colorkey(FULL_BLACK)
         self.rect = self.image.get_rect()     
               
 #Funciones
-def generateTargets(game, amount):
-    for i in range(amount):
-        type = random.randint(1,4)
-        target = Target(type)
-        target.rect.x = random.randint(10, SCREEN_LENGHT - 50)
-        target.rect.y = random.randint(10, SCREEN_HIGH - 50)
-    
-        game.target_list.add(target)
-        game.all_sprites_list.add(target)
-        
 def aim(center): #? Mirilla que sigue al mouse
-    pygame.draw.circle(screen, red, center, 20, 5)
-    pygame.draw.circle(screen, red, center, 5)
+    pygame.draw.circle(screen, RED, center, 20, 5)
+    pygame.draw.circle(screen, RED, center, 5)
 
 def startScreen():
-    start_title = title_font.render("Pantalla de Inicio", True, full_black)
-    screen.blit(start_title, TITLE_POS)
-    start_text = subtitle_font.render("Presione cualquier tecla para iniciar", True, full_black)
-    screen.blit(start_text, SUBTITLE_POS )
+    start_title = title_font.render("Pantalla de Inicio", True, FULL_BLACK) 
+    start_text = subtitle_font.render("Presione cualquier tecla para iniciar", True, FULL_BLACK)
+    sign = sign_font.render(f"Hecho por: Julian Perrotta - UMET", True, SKYBLUE)
     
-def inGameScreen(score, level):
-    score_text = score_font.render(f"Score: {score}", True, red)
-    level_text = title_font.render(f"Level {level}", True, red)
+    screen.blit(start_title, TITLE_POS)
+    screen.blit(start_text, SUBTITLE_POS )
+    screen.blit(sign, SIGN_POS)
+    
+def inGameScreen(score, level, t):
+    score_text = score_font.render(f"Score: {score}", True, RED)
+    level_text = title_font.render(f"Level {level}", True, RED)
+    time_text = score_font.render(f"Time: {t}", True, FULL_BLACK)
     
     screen.blit(score_text, SCORE_POS)
-    screen.blit(level_text, LEVEL_POS)  
+    screen.blit(level_text, LEVEL_POS) 
+    screen.blit(time_text, TIME_POS) 
         
         
-         
 #######!!! Clase 'Game'
 class Game():
     def __init__(self):
         self.score = 0
-        self.level = 1
+        self.level = 0
         self.start = True
         self.setTime()
         
@@ -133,7 +135,17 @@ class Game():
         
     def passTime(self):
         self.time -= 1
+    
+    def generateTargets(self):
+        for i in range(10 + 2*self.level):
+            type = random.randint(1,4)
+            target = Target(type)
+            target.rect.x = random.randint(10, SCREEN_LENGHT - 50)
+            target.rect.y = random.randint(10, SCREEN_HIGH - 50)
 
+            self.target_list.add(target)
+            self.all_sprites_list.add(target)
+        self.level += 1
     
     #!Funciones pricipales de juego        
     def events(self):
@@ -164,7 +176,7 @@ class Game():
                     self.bullet_list.empty()
                     self.all_sprites_list.empty()
                     
-                    generateTargets(self, 30) #? primera vez que genera los objetivos, luego de tocar cualquier tecla en la pantalla de inicio
+                    self.generateTargets() #? primera vez que genera los objetivos, luego de tocar cualquier tecla en la pantalla de inicio
                      
         return False
     
@@ -180,7 +192,7 @@ class Game():
             self.bullet_list.draw(screen)
             
         else:   
-            inGameScreen(self.score, self.level)
+            inGameScreen(self.score, self.level, self.time)
             self.all_sprites_list.draw(screen) #? Diferenciacion entre pantalla de inicio y de juego
             
             
@@ -193,9 +205,9 @@ class Game():
         self.all_sprites_list.update()
         
         #? Eliminar los disparos apenas se generan, para evitar que se queden estaticos y colisionen con los objetivos que se mueven,
-        #? Pero aun asi se generan una milesima de segundo, por lo que al momento del disparo si hay colision
+        #? Pero aun asi se generan una fraccion de segundo, por lo que al momento del disparo si hay colision
         for shot in self.shot_list:
-            if self.global_time - self.shot_time > 20:
+            if self.global_time - self.shot_time > 20: #? Esto significa que el disparo con colision se genera por solo 20 milesimas de segundo y luego se elimina
                 self.shot_list.remove(shot)
                 self.all_sprites_list.remove(shot)  
                     
@@ -203,20 +215,19 @@ class Game():
             self.passTime() #? Pasar el tiempo del nivel
             #print(self.time)
             for shot in self.shot_list:
-                target_hitlist = pygame.sprite.spritecollide(shot, self.target_list, True)
-                
+                target_hitlist = pygame.sprite.spritecollide(shot, self.target_list, True) #? Colisiones Detectar los disparos cuando aciertan a un objetivo
                 
                 for hit in target_hitlist:
-                    self.score += 1
+                    self.score += 1 #? Aumenta el puntaje cuando se produce la colision 
                     clang.play()
                     
             if len(self.target_list) == 0:
-                self.shot_list.empty()  #? Cuando destruyo todos los objetivos antes de que termine el tiempo,
+                self.shot_list.empty()  #? Cuando destruyo todos los objetivos antes de que termine el tiempo:
                 self.target_list.empty()  #? se vacian todas las carpetas de sprites, se reinicia el tiempo y se vuelven a generar 'targets', subiendo de nivel
                 self.all_sprites_list.empty()
                 
                 self.setTime()
-                generateTargets(self, 35)
+                self.generateTargets()
             
             
             if self.time == 0:  
@@ -238,17 +249,21 @@ def main():
     while not done:
         done = mygame.events()
         
-        #*extra de tiempo global
+        #*tiempo global
         timer = pygame.time.get_ticks()
         mygame.global_time = timer
+        #*
         
         mygame.gameLogic() 
         mygame.screenUpdate()
         
-        print(f"Time: {mygame.global_time} ShotTime: {mygame.shot_time}")
+        #print(f"Time: {mygame.global_time} ShotTime: {mygame.shot_time}")
         
         clock.tick(60)
         
 
         
     pygame.quit()
+    
+    
+main()

@@ -154,7 +154,11 @@ class Game():
         self.time -= 1
     
     def generateTargets(self):
-        for i in range(8 + 2*self.level):
+        amount = 8 + 2*self.level #? La cantidad de objetivos aumenta en 2 por cada nivel que pasa(el tiempo se mantiene igual)
+        if amount > 100:         #? Como maxino puede haber 100 objetivos
+            amount = 100
+        
+        for i in range(amount):
             type = random.randint(1,4)
             target = Target(type)
             target.rect.x = random.randint(10, SCREEN_LENGHT - 50)
@@ -277,13 +281,13 @@ def main():
         mygame.gameLogic() 
         mygame.screenUpdate()
         
-        print(f"Time: {mygame.global_time} ShotTime: {mygame.shot_time}")
+        #print(f"Time: {mygame.global_time} ShotTime: {mygame.shot_time}")
         
         clock.tick(60)
         
 
-        
     pygame.quit()
     
     
+##############    
 main()

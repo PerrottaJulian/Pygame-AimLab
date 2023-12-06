@@ -21,7 +21,7 @@ SCREEN_HIGH = 500 #650
 MIDDLE = (SCREEN_LENGHT//3, SCREEN_HIGH//2)
 DOWN_MIDDLE = (SCREEN_LENGHT//3, SCREEN_HIGH//2 + 30)
 TITLE_POS = (SCREEN_LENGHT//3, 40)
-SUBTITLE_POS = (SCREEN_LENGHT//3+40, 90)
+SUBTITLE_POS = (SCREEN_LENGHT//3+20, 90)
 SCORE_POS = (40, SCREEN_HIGH-30)
 TIME_POS = (SCREEN_LENGHT-100, SCREEN_HIGH-30)
 LEVEL_POS = (10, 10)
@@ -94,13 +94,15 @@ def aim(center): #? Mirilla que sigue al mouse
     pygame.draw.circle(screen, RED, center, 5)
 
 def startScreen():
-    start_title = title_font.render("Pantalla de Inicio", True, FULL_BLACK) 
+    start_title = title_font.render("AimLabs Lite", True, FULL_BLACK) 
     start_text = subtitle_font.render("Presione cualquier tecla para iniciar", True, FULL_BLACK)
     sign = sign_font.render(f"Hecho por: Julian Perrotta - UMET", True, SKYBLUE)
+    record_text = score_font.render(f"Record: {getRecord()}", True, FULL_BLACK)
     
     screen.blit(start_title, TITLE_POS)
     screen.blit(start_text, SUBTITLE_POS )
     screen.blit(sign, SIGN_POS)
+    screen.blit(record_text, SCORE_POS)
     
 def inGameScreen(score, level, t):
     score_text = score_font.render(f"Score: {score}", True, RED)
@@ -112,11 +114,26 @@ def inGameScreen(score, level, t):
     screen.blit(time_text, TIME_POS) 
         
         
+def save_file (value, filename):
+    with open(filename, "w") as f:
+        f.write(value) 
+
+def load_file (filename):
+    with open(filename, "r") as f:
+        read = f.read()
+    return read
+
+def setRecord(score):
+    save_file(str(score), "record.txt")
+
+def getRecord():
+    return load_file("record.txt")
+          
 #######!!! Clase 'Game'
 class Game():
     def __init__(self):
         self.score = 0
-        self.level = 0
+        self.level = 1
         self.start = True
         self.setTime()
         
@@ -137,7 +154,7 @@ class Game():
         self.time -= 1
     
     def generateTargets(self):
-        for i in range(10 + 2*self.level):
+        for i in range(8 + 2*self.level):
             type = random.randint(1,4)
             target = Target(type)
             target.rect.x = random.randint(10, SCREEN_LENGHT - 50)
@@ -145,7 +162,7 @@ class Game():
 
             self.target_list.add(target)
             self.all_sprites_list.add(target)
-        self.level += 1
+        
     
     #!Funciones pricipales de juego        
     def events(self):
@@ -186,15 +203,14 @@ class Game():
         #fondo de pantalla
         screen.blit(background, [0,0]) 
         
-        if self.start:
-            startScreen()
+        if self.start:    #? Diferenciacion entre pantalla de inicio y de juego
+            startScreen()   
             self.shot_list.draw(screen)
             self.bullet_list.draw(screen)
             
         else:   
             inGameScreen(self.score, self.level, self.time)
-            self.all_sprites_list.draw(screen) #? Diferenciacion entre pantalla de inicio y de juego
-            
+            self.all_sprites_list.draw(screen)
             
             
         aim(self.mouse_pos)
@@ -226,18 +242,22 @@ class Game():
                 self.target_list.empty()  #? se vacian todas las carpetas de sprites, se reinicia el tiempo y se vuelven a generar 'targets', subiendo de nivel
                 self.all_sprites_list.empty()
                 
+                self.level += 1
                 self.setTime()
                 self.generateTargets()
             
             
             if self.time == 0:  
+                if self.score > int(getRecord()):
+                    setRecord(self.score)
+                    
                 self.__init__()
             
             #? La idea del juego es acumular la mayor cantidad de puntos, disparandole a los objetivos.
             #?Cuando le disparaste a todos los objetivos, se reinica el timpo y aparecen nuevos (se avanza de nivel)
             #?Se pierde cuando te quedas sin tiempo
             #?La cantidad de tiempo es simpre la misma, pero en cada nuevo nivel hay mas objetivos.
-            
+    
 ########################!
         
 #Funcion principal
@@ -257,7 +277,7 @@ def main():
         mygame.gameLogic() 
         mygame.screenUpdate()
         
-        #print(f"Time: {mygame.global_time} ShotTime: {mygame.shot_time}")
+        print(f"Time: {mygame.global_time} ShotTime: {mygame.shot_time}")
         
         clock.tick(60)
         

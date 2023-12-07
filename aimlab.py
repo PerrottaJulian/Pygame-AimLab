@@ -1,3 +1,4 @@
+from typing import Any
 import pygame, random
 # = guia del codigo // Usar la extension 'Better Comments' para ver los comentarios especiales
 #* = Codigo no usado por el momento/comentarios personales
@@ -5,7 +6,7 @@ import pygame, random
 #? = Comentarios 
 
 #Constantes
-FULL_BLACK = (0,0,0)
+FULL_BLACK = (0,0,0) #? Colores
 BLACK = (2,2,2)
 WHITE = (255,255,255)
 BLUE = (0,0,255)
@@ -15,10 +16,10 @@ GREY = (50,50,50)
 DARK_BLUE = (0, 0, 15)
 SKYBLUE = (24, 125, 184)
 
-SCREEN_LENGHT = 1000 #1300
+SCREEN_LENGHT = 1000 #1300 #? limites de la pantalla
 SCREEN_HIGH = 500 #650
 
-MIDDLE = (SCREEN_LENGHT//3, SCREEN_HIGH//2)
+MIDDLE = (SCREEN_LENGHT//3, SCREEN_HIGH//2) #? Distintas posiciones donde voy a dibujar texto 
 DOWN_MIDDLE = (SCREEN_LENGHT//3, SCREEN_HIGH//2 + 30)
 TITLE_POS = (SCREEN_LENGHT//3, 40)
 SUBTITLE_POS = (SCREEN_LENGHT//3+20, 90)
@@ -52,21 +53,21 @@ sign_font  = pygame.font.SysFont("comicsans", 15, True)
 clock = pygame.time.Clock()
 
 #Sprites
-targets = ["sprites_and_sounds/target_big.png", "sprites_and_sounds/target_small.png", "sprites_and_sounds/target.png"]
+targets = ["sprites_and_sounds/target_big.png", "sprites_and_sounds/target_small.png", "sprites_and_sounds/target.png"] #? Distintos tamaños de los objetivos
 class Target(pygame.sprite.Sprite):
-    def __init__(self, type):
+    def __init__(self):
         super().__init__()
-        r = random.randint(0,10)
-        if r > 1:
+        r = random.randint(0,10) #? Para que haya mas posiblidades de que el objetivo sea de tamaño normal, defino que si 'r' es 0 o 1 toma la respectiva posicion de la lista
+        if r > 1:                #? Pero si es entre 2 y 10, va a tomar la posicion 2, que es el objetivo normal
             r = 2
             
-        self.image = pygame.image.load(targets[r]).convert()
+        self.image = pygame.image.load(targets[r]).convert() #? Segun el numero random que salga, el sprite del objetivo va a ser distinto (cambia el tamaño solamente)
         self.image.set_colorkey(FULL_BLACK)
         self.rect = self.image.get_rect()
         
-        self.speed = random.randint(3,7)
-        self.type = type
-        
+        self.type = random.randint(1,4)  #? De manera similar, defino de manera aleatoria el tipo de objetivo. Si sale 1, se va a mover, si sale de 2 a 4 sera estatico
+        self.speed = random.randint(3,7) #? Distintos niveles de velocidad a la que se movera una objetivo si tiene la posibilidad
+    
     def update(self):
         if self.type == 1:
             self.rect.x += self.speed
@@ -79,10 +80,10 @@ class Shot(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load("sprites_and_sounds/disparo4.png").convert()
         self.image.set_colorkey(FULL_BLACK)
-        self.rect = self.image.get_rect()  
-
-class BulletHole(pygame.sprite.Sprite):
-    def __init__(self):
+        self.rect = self.image.get_rect()
+        
+class BulletHole(pygame.sprite.Sprite): #? Los sprites de 'shot' y 'bullethole' son los mismos, pero uno sirve para detectar colisiones y desaparece apenas se genera
+    def __init__(self):                 #? mientras el otro sirve para la parte visual
         super().__init__()
         self.image = pygame.image.load("sprites_and_sounds/disparo4.png").convert()
         self.image.set_colorkey(FULL_BLACK)
@@ -129,7 +130,7 @@ def setRecord(score):
 def getRecord():
     return load_file("record.txt")
           
-#######!!! Clase 'Game'
+#######!!! Clase 'Game' 
 class Game():
     def __init__(self):
         self.score = 0
@@ -155,12 +156,12 @@ class Game():
     
     def generateTargets(self):
         amount = 8 + 2*self.level #? La cantidad de objetivos aumenta en 2 por cada nivel que pasa(el tiempo se mantiene igual)
-        if amount > 100:         #? Como maxino puede haber 100 objetivos
-            amount = 100
+        if amount > 50:         #? Como maxino puede haber 100 objetivos
+            amount = 50
         
         for i in range(amount):
-            type = random.randint(1,4)
-            target = Target(type)
+            #type = random.randint(1,4)
+            target = Target()
             target.rect.x = random.randint(10, SCREEN_LENGHT - 50)
             target.rect.y = random.randint(10, SCREEN_HIGH - 50)
 
@@ -174,6 +175,7 @@ class Game():
             if event.type == pygame.QUIT: #? Permite salir del juego
                 #self.done = True
                 return True
+            
             if event.type == pygame.MOUSEBUTTONDOWN:
                 shot = Shot()
                 bullet_hole = BulletHole()
@@ -184,10 +186,11 @@ class Game():
                 self.bullet_list.add(bullet_hole)
                 self.all_sprites_list.add(shot)
                 self.all_sprites_list.add(bullet_hole)
+                
         
                 gunshot.play()
                 
-                #*extra de tiempo cuando disparo
+                #*extra de tiempo cuando disparo 
                 self.shot_time = pygame.time.get_ticks()
          
             if event.type == pygame.KEYDOWN:
@@ -226,6 +229,7 @@ class Game():
         
         #? Eliminar los disparos apenas se generan, para evitar que se queden estaticos y colisionen con los objetivos que se mueven,
         #? Pero aun asi se generan una fraccion de segundo, por lo que al momento del disparo si hay colision
+        
         for shot in self.shot_list:
             if self.global_time - self.shot_time > 20: #? Esto significa que el disparo con colision se genera por solo 20 milesimas de segundo y luego se elimina
                 self.shot_list.remove(shot)
@@ -278,12 +282,12 @@ def main():
         mygame.global_time = timer
         #*
         
-        mygame.gameLogic() 
-        mygame.screenUpdate()
+        mygame.gameLogic()   #? Primero leo los eventos, luego leo la logica y por ultimo actualizo la pantalla, 
+        mygame.screenUpdate() #? Aunque tras algunas pruebas cambiando el orden no vi mucha diferencia
         
         #print(f"Time: {mygame.global_time} ShotTime: {mygame.shot_time}")
         
-        clock.tick(60)
+        clock.tick(60) #? El clock marca los Frames Por Segundo
         
 
     pygame.quit()

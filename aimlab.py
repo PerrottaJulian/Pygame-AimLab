@@ -1,4 +1,3 @@
-from typing import Any
 import pygame, random
 # = guia del codigo // Usar la extension 'Better Comments' para ver los comentarios especiales
 #* = Codigo no usado por el momento/comentarios personales
@@ -16,8 +15,8 @@ GREY = (50,50,50)
 DARK_BLUE = (0, 0, 15)
 SKYBLUE = (24, 125, 184)
 
-SCREEN_LENGHT = 1000 #1300 #? limites de la pantalla
-SCREEN_HIGH = 500 #650
+SCREEN_LENGHT = 1300 #? limites de la pantalla
+SCREEN_HIGH = 650
 
 MIDDLE = (SCREEN_LENGHT//3, SCREEN_HIGH//2) #? Distintas posiciones donde voy a dibujar texto 
 DOWN_MIDDLE = (SCREEN_LENGHT//3, SCREEN_HIGH//2 + 30)

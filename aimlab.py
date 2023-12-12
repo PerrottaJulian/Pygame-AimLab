@@ -15,13 +15,18 @@ GREY = (50,50,50)
 DARK_BLUE = (0, 0, 15)
 SKYBLUE = (24, 125, 184)
 
+<<<<<<< Updated upstream
 SCREEN_LENGHT = 1300 #? limites de la pantalla
 SCREEN_HIGH = 650
+=======
+SCREEN_LENGHT = 1000#1300 #? limites de la pantalla
+SCREEN_HIGH = 500#650
+>>>>>>> Stashed changes
 
 MIDDLE = (SCREEN_LENGHT//3, SCREEN_HIGH//2) #? Distintas posiciones donde voy a dibujar texto 
 DOWN_MIDDLE = (SCREEN_LENGHT//3, SCREEN_HIGH//2 + 30)
 TITLE_POS = (SCREEN_LENGHT//3, 40)
-SUBTITLE_POS = (SCREEN_LENGHT//3+20, 90)
+SUBTITLE_POS = (SCREEN_LENGHT//3+40, 90)
 SCORE_POS = (40, SCREEN_HIGH-30)
 TIME_POS = (SCREEN_LENGHT-100, SCREEN_HIGH-30)
 LEVEL_POS = (10, 10)
@@ -44,7 +49,7 @@ clang = pygame.mixer.Sound("sprites_and_sounds/target-sound2.mp3")
 
 #fuentes de texto
 title_font = pygame.font.SysFont("serif", 50, True)
-subtitle_font = pygame.font.SysFont("arial", 20, False, True)
+subtitle_font = pygame.font.SysFont("arial", 15, True, True)
 score_font  = pygame.font.SysFont("arial", 20, True)
 sign_font  = pygame.font.SysFont("comicsans", 15, True)
 
@@ -63,23 +68,25 @@ class Target(pygame.sprite.Sprite):
         self.image = pygame.image.load(targets[r]).convert() #? Segun el numero random que salga, el sprite del objetivo va a ser distinto (cambia el tamaño solamente)
         self.image.set_colorkey(FULL_BLACK)
         self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
         
         self.type = random.randint(1,4)  #? De manera similar, defino de manera aleatoria el tipo de objetivo. Si sale 1, se va a mover, si sale de 2 a 4 sera estatico
         self.speed = random.randint(3,7) #? Distintos niveles de velocidad a la que se movera una objetivo si tiene la posibilidad
     
     def update(self):
         if self.type == 1:
-            self.rect.x += self.speed
+            self.rect.x += self.speed #? Esta funcion permite que se actualice la posicion del sprite, va a aumentar su x segun la velocidad
             
             if self.rect.x >= SCREEN_LENGHT-10 or self.rect.x < 0:
-                self.speed *= -1
+                self.speed *= -1 #? Cuando el objetivo toca la pared, rebota y sigue moviendose en la posicion contraria
                    
 class Shot(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("sprites_and_sounds/disparo4.png").convert()
         self.image.set_colorkey(FULL_BLACK)
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect() 
+        self.mask = pygame.mask.from_surface(self.image)
         
 class BulletHole(pygame.sprite.Sprite): #? Los sprites de 'shot' y 'bullethole' son los mismos, pero uno sirve para detectar colisiones y desaparece apenas se genera
     def __init__(self):                 #? mientras el otro sirve para la parte visual
@@ -94,13 +101,13 @@ def aim(center): #? Mirilla que sigue al mouse
     pygame.draw.circle(screen, RED, center, 5)
 
 def startScreen():
-    start_title = title_font.render("AimLabs Lite", True, FULL_BLACK) 
+    start_title = title_font.render("AimLabs Lite", True, SKYBLUE) 
     start_text = subtitle_font.render("Presione cualquier tecla para iniciar", True, FULL_BLACK)
     sign = sign_font.render(f"Hecho por: Julian Perrotta - UMET", True, SKYBLUE)
     record_text = score_font.render(f"Record: {getRecord()}", True, FULL_BLACK)
     
     screen.blit(start_title, TITLE_POS)
-    screen.blit(start_text, SUBTITLE_POS )
+    screen.blit(start_text, SUBTITLE_POS )       #? Pantallas de Inicio y de Juego (Solo los textos)
     screen.blit(sign, SIGN_POS)
     screen.blit(record_text, SCORE_POS)
     
@@ -115,7 +122,7 @@ def inGameScreen(score, level, t):
         
         
 def save_file (value, filename):
-    with open(filename, "w") as f:
+    with open(filename, "w") as f: #? Codigo necesario para guarda el record de puntos de forma permanente
         f.write(value) 
 
 def load_file (filename):
@@ -136,26 +143,27 @@ class Game():
         self.level = 1
         self.start = True
         self.setTime()
-        
-        #*extra de timepo global
+
         self.global_time = 0
         self.shot_time = 0
         
         #listas
-        self.target_list = pygame.sprite.Group() #? Proposito: Detectar colisiones
+        self.target_list = pygame.sprite.Group() #? Grupos de sprites individuales
         self.shot_list = pygame.sprite.Group()
-        self.bullet_list = pygame.sprite.Group() #? Proposito: Dibujar los sprites
-        self.all_sprites_list = pygame.sprite.Group() 
+        self.bullet_list = pygame.sprite.Group()
+        
+        self.all_sprites_list = pygame.sprite.LayeredUpdates() #? grupo con todos los sprites, para dibujarlos en pantalla
+        #? lo inicializo como LayeredUpdate y no como Group para poder mover de posicion los sprites y que uno quede abajo de otro
     
     def setTime(self):
-        self.time = 1000
+        self.time = 1500 #? tiempo de un nivel
         
     def passTime(self):
         self.time -= 1
     
     def generateTargets(self):
         amount = 8 + 2*self.level #? La cantidad de objetivos aumenta en 2 por cada nivel que pasa(el tiempo se mantiene igual)
-        if amount > 50:         #? Como maxino puede haber 100 objetivos
+        if amount > 50:         #? Como maxino puede haber 50 objetivos
             amount = 50
         
         for i in range(amount):
@@ -175,9 +183,9 @@ class Game():
                 #self.done = True
                 return True
             
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                shot = Shot()
-                bullet_hole = BulletHole()
+            if event.type == pygame.MOUSEBUTTONDOWN: #? Accion de disparo
+                shot = Shot()  #? AL disparar, se generan 2 sprites iguales, uno va a desaparecer casi al instante, pero va a detectar la colision con el objeivo
+                bullet_hole = BulletHole() #? Mientras que el oto va a quedar estatico en el lugar de disparo 
                 shot.rect.center = self.mouse_pos
                 bullet_hole.rect.center = self.mouse_pos
                 
@@ -185,11 +193,8 @@ class Game():
                 self.bullet_list.add(bullet_hole)
                 self.all_sprites_list.add(shot)
                 self.all_sprites_list.add(bullet_hole)
-                
-        
+                self.all_sprites_list.move_to_back(bullet_hole) #? Se añaden todos los sprites a las debidas listas y se mueve el augujero estatico al fondo
                 gunshot.play()
-                
-                #*extra de tiempo cuando disparo 
                 self.shot_time = pygame.time.get_ticks()
          
             if event.type == pygame.KEYDOWN:
@@ -238,8 +243,7 @@ class Game():
             self.passTime() #? Pasar el tiempo del nivel
             #print(self.time)
             for shot in self.shot_list:
-                target_hitlist = pygame.sprite.spritecollide(shot, self.target_list, True) #? Colisiones Detectar los disparos cuando aciertan a un objetivo
-                
+                target_hitlist = pygame.sprite.spritecollide(shot, self.target_list, True, pygame.sprite.collide_mask) #? Colisiones Detectar los disparos cuando aciertan a un objetivo
                 for hit in target_hitlist:
                     self.score += 1 #? Aumenta el puntaje cuando se produce la colision 
                     clang.play()

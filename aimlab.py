@@ -42,7 +42,8 @@ background = pygame.image.load("sprites_and_sounds/wall.png")
 #sonido
 gunshot = pygame.mixer.Sound("sprites_and_sounds/gunshot2.mp3")
 clang = pygame.mixer.Sound("sprites_and_sounds/target-sound2.mp3")
-
+gunshot.set_volume(0.3)
+clang.set_volume(0.3)
 #fuentes de texto
 title_font = pygame.font.SysFont("serif", 50, True)
 subtitle_font = pygame.font.SysFont("arial", 15, True, True)
@@ -152,7 +153,7 @@ class Game():
         #? lo inicializo como LayeredUpdate y no como Group para poder mover de posicion los sprites y que uno quede abajo de otro
     
     def setTime(self):
-        self.time = 1500 #? tiempo de un nivel
+        self.time = 1000 #? tiempo de un nivel
         
     def passTime(self):
         self.time -= 1
